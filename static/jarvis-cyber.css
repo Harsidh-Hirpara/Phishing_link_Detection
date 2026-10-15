@@ -1,0 +1,485 @@
+/* JARVIS Cyber Security Theme
+   Add this stylesheet AFTER existing styles in templates/index.html.
+   It changes presentation only; it does not modify scanner logic. */
+
+:root {
+  color-scheme: dark;
+  --jarvis-bg: #07111f;
+  --jarvis-bg-soft: #0b1728;
+  --jarvis-panel: rgba(13, 28, 47, 0.92);
+  --jarvis-panel-strong: #0d1b2e;
+  --jarvis-border: rgba(80, 190, 220, 0.22);
+  --jarvis-text: #e8f4ff;
+  --jarvis-muted: #91a8bd;
+  --jarvis-cyan: #22d3ee;
+  --jarvis-green: #4ade80;
+  --jarvis-amber: #fbbf24;
+  --jarvis-red: #fb7185;
+  --jarvis-radius: 16px;
+}
+
+html {
+  background: var(--jarvis-bg);
+  scroll-behavior: smooth;
+}
+
+body {
+  color: var(--jarvis-text) !important;
+  background:
+    radial-gradient(ellipse at 12% 0%, rgba(8, 145, 178, 0.16), transparent 38%),
+    radial-gradient(ellipse at 90% 14%, rgba(34, 211, 238, 0.08), transparent 30%),
+    linear-gradient(145deg, #050b14 0%, #071525 48%, #08111e 100%) !important;
+  font-family: "Space Grotesk", Inter, system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.16;
+  background-image:
+    linear-gradient(rgba(34, 211, 238, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 238, 0.07) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: linear-gradient(to bottom, black, transparent 82%);
+}
+
+main {
+  width: min(1120px, 100%) !important;
+  max-width: 1120px !important;
+  margin: 0 auto !important;
+  padding: 42px 24px 64px !important;
+}
+
+header {
+  margin-bottom: 28px;
+}
+
+h1, h2, h3, h4, .log-title, .section-title {
+  color: #f0f9ff !important;
+  letter-spacing: -0.025em;
+}
+
+h1 {
+  font-size: clamp(30px, 4vw, 46px) !important;
+  line-height: 1.1;
+  text-shadow: 0 0 28px rgba(34, 211, 238, 0.14);
+}
+
+h2 { font-size: clamp(21px, 2.4vw, 28px); }
+h3 { font-size: 18px; }
+
+p, .sub, .hint, small, label, footer {
+  color: var(--jarvis-muted);
+}
+
+.eyebrow {
+  color: var(--jarvis-cyan) !important;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.sub {
+  max-width: 760px;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+a {
+  color: var(--jarvis-cyan);
+  text-decoration-color: rgba(34, 211, 238, 0.4);
+}
+
+a:hover { color: #a5f3fc; }
+
+.console,
+.card,
+.panel,
+.verdict-card,
+.score-block,
+.verdict-info,
+#results,
+.result-card,
+.security-card,
+.analysis-card,
+.jarvis-card,
+.report-card,
+section,
+article,
+.check,
+#checks li {
+  border-color: var(--jarvis-border);
+}
+
+.console {
+  background: rgba(5, 15, 28, 0.96) !important;
+  border: 1px solid rgba(34, 211, 238, 0.36);
+  border-radius: var(--jarvis-radius) !important;
+  padding: 16px !important;
+  gap: 12px;
+  box-shadow:
+    0 18px 55px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 0 28px rgba(34, 211, 238, 0.06) !important;
+}
+
+.console .prompt {
+  color: var(--jarvis-green) !important;
+  font-weight: 700;
+}
+
+#url-input,
+input[type="text"],
+input[type="url"],
+input[type="search"],
+textarea,
+select {
+  color: var(--jarvis-text) !important;
+  background: #081625 !important;
+  border: 1px solid rgba(116, 163, 190, 0.32) !important;
+  border-radius: 10px;
+  min-height: 46px;
+  padding: 12px 14px;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+#url-input {
+  flex: 1;
+  min-width: 0;
+  border: 0 !important;
+  background: transparent !important;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 14px;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #668198 !important;
+  opacity: 1;
+}
+
+input:focus,
+textarea:focus,
+select:focus,
+#url-input:focus {
+  border-color: var(--jarvis-cyan) !important;
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.12);
+}
+
+button,
+#analyze-btn,
+.btn,
+button[type="submit"] {
+  color: #03131a !important;
+  background: linear-gradient(135deg, #67e8f9, #22d3ee 55%, #34d399) !important;
+  border: 1px solid rgba(165, 243, 252, 0.7) !important;
+  border-radius: 10px !important;
+  min-height: 44px;
+  padding: 11px 20px !important;
+  font: 700 13px/1.2 "Space Grotesk", sans-serif;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 7px 22px rgba(34, 211, 238, 0.16);
+  transition: transform 160ms ease, filter 160ms ease, box-shadow 160ms ease;
+}
+
+button:hover,
+#analyze-btn:hover,
+.btn:hover,
+button[type="submit"]:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(34, 211, 238, 0.24);
+}
+
+button:disabled,
+#analyze-btn:disabled {
+  cursor: wait;
+  opacity: 0.65;
+  transform: none;
+}
+
+.hint {
+  margin: 10px 2px 22px;
+  font-size: 12px;
+}
+
+kbd {
+  color: #c9f7ff;
+  background: #14283a;
+  border: 1px solid #28465b;
+  border-radius: 5px;
+  padding: 2px 6px;
+  font: 11px "IBM Plex Mono", monospace;
+}
+
+#results {
+  margin-top: 22px;
+}
+
+.verdict-card,
+.card,
+.panel,
+.result-card,
+.security-card,
+.analysis-card,
+.jarvis-card,
+.report-card,
+#results > section,
+#results .card {
+  background: linear-gradient(145deg, rgba(14, 31, 51, 0.96), rgba(8, 20, 35, 0.96)) !important;
+  border: 1px solid var(--jarvis-border) !important;
+  border-radius: var(--jarvis-radius) !important;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.18);
+}
+
+.verdict-card {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  padding: 24px !important;
+  margin-bottom: 24px;
+}
+
+.score-block {
+  min-width: 150px;
+  padding: 18px;
+  border-radius: 14px;
+  background: rgba(4, 13, 23, 0.72);
+  border: 1px solid rgba(34, 211, 238, 0.17);
+}
+
+#score-num {
+  color: var(--jarvis-cyan) !important;
+  font: 700 clamp(34px, 5vw, 48px)/1 "IBM Plex Mono", monospace;
+  letter-spacing: -0.06em;
+}
+
+#score-num small {
+  color: #8da9bd !important;
+  font-size: 15px;
+  letter-spacing: 0;
+}
+
+.score-label {
+  color: var(--jarvis-muted);
+  font-size: 12px;
+  margin-top: 10px;
+}
+
+.verdict-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#scanned-url {
+  color: #c6d7e5 !important;
+  overflow-wrap: anywhere;
+  font: 12px/1.7 "IBM Plex Mono", ui-monospace, monospace;
+}
+
+.badge,
+.status-tag,
+.status,
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+}
+
+.badge.safe,
+.safe .badge,
+.status-tag.pass,
+.check.pass .status-tag,
+.status.pass {
+  color: var(--jarvis-green) !important;
+  background: rgba(74, 222, 128, 0.09);
+}
+
+.badge.suspicious,
+.badge.risky,
+.status-tag.warn,
+.check.warn .status-tag,
+.status.warn {
+  color: var(--jarvis-amber) !important;
+  background: rgba(251, 191, 36, 0.09);
+}
+
+.badge.malicious,
+.badge.phishing,
+.badge.unsafe,
+.status-tag.fail,
+.check.fail .status-tag,
+.status.fail {
+  color: var(--jarvis-red) !important;
+  background: rgba(251, 113, 133, 0.1);
+}
+
+.meter {
+  display: flex;
+  gap: 4px;
+  margin-top: 14px;
+}
+
+.meter span {
+  display: block;
+  height: 5px;
+  flex: 1;
+  border-radius: 99px;
+  background: #26394b;
+}
+
+.meter span.active,
+.meter span.filled {
+  background: var(--jarvis-cyan);
+  box-shadow: 0 0 9px rgba(34, 211, 238, 0.35);
+}
+
+.log-title {
+  color: #dff8ff !important;
+  margin: 28px 0 12px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+#checks {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0;
+}
+
+#checks li,
+.check {
+  list-style: none;
+  background: rgba(12, 28, 46, 0.88) !important;
+  border: 1px solid rgba(112, 157, 184, 0.2) !important;
+  border-radius: 12px !important;
+  padding: 15px 16px !important;
+  color: #d7e8f5;
+  line-height: 1.55;
+}
+
+.check.pass,
+#checks li.pass { border-left: 3px solid var(--jarvis-green) !important; }
+.check.warn,
+#checks li.warn { border-left: 3px solid var(--jarvis-amber) !important; }
+.check.fail,
+#checks li.fail { border-left: 3px solid var(--jarvis-red) !important; }
+
+#checks li strong,
+.check strong,
+#checks li b,
+.check b {
+  color: #effaff;
+}
+
+#error-box,
+.alert,
+.error-box {
+  color: #fecdd3 !important;
+  background: rgba(159, 18, 57, 0.18) !important;
+  border: 1px solid rgba(251, 113, 133, 0.42) !important;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 12px 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #d7e8f5;
+  background: rgba(8, 21, 36, 0.72);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+th {
+  color: #baf5ff;
+  background: rgba(34, 211, 238, 0.09);
+  text-align: left;
+}
+
+th, td {
+  border-bottom: 1px solid rgba(112, 157, 184, 0.18);
+  padding: 11px 13px;
+}
+
+pre, code, .mono {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+pre, .console-output, .terminal, .forensic-output {
+  color: #c9f7ff;
+  background: #050d17;
+  border: 1px solid rgba(34, 211, 238, 0.18);
+  border-radius: 12px;
+  padding: 16px;
+  overflow: auto;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--jarvis-border);
+  margin: 22px 0;
+}
+
+footer {
+  text-align: center;
+  padding: 22px 16px;
+  font-size: 12px;
+  border-top: 1px solid rgba(80, 190, 220, 0.12);
+  background: rgba(4, 11, 20, 0.55);
+}
+
+:focus-visible {
+  outline: 2px solid var(--jarvis-cyan);
+  outline-offset: 3px;
+}
+
+@media (max-width: 760px) {
+  main {
+    padding: 28px 16px 44px !important;
+  }
+
+  .verdict-card {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px !important;
+  }
+
+  .score-block { min-width: 0; }
+  #checks { grid-template-columns: 1fr; }
+  .console { flex-wrap: wrap; }
+  #url-input { flex-basis: calc(100% - 36px); }
+  #analyze-btn { width: 100%; }
+  .console .prompt { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

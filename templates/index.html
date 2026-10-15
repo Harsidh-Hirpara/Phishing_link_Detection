@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<title>URL Phishing Detector</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+<style>
+
+  :root {
+    color-scheme: dark;
+    --bg: #060b14;
+    --bg-soft: #0a1220;
+    --ink: #e8f5ff;
+    --muted: #8ca5bc;
+    --line: rgba(88, 211, 255, .18);
+    --card: rgba(13, 25, 42, .88);
+    --console: #050a12;
+    --console-ink: #e8f5ff;
+    --accent: #00d9ff;
+    --accent-2: #62ffb6;
+    --pass: #62ffb6;
+    --warn: #ffc857;
+    --fail: #ff5577;
+    --radius: 16px;
+    --glow: 0 0 32px rgba(0, 217, 255, .09);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    color: var(--ink);
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    background:
+      radial-gradient(ellipse at 12% 0%, rgba(0, 217, 255, .12), transparent 34rem),
+      radial-gradient(ellipse at 90% 30%, rgba(98, 255, 182, .07), transparent 30rem),
+      var(--bg);
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    opacity: .17;
+    background-image: linear-gradient(rgba(91, 176, 212, .12) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(91, 176, 212, .12) 1px, transparent 1px);
+    background-size: 38px 38px;
+    mask-image: linear-gradient(to bottom, black, transparent 85%);
+  }
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+  main { width: min(100% - 36px, 900px); margin: 0 auto; padding: 54px 0 64px; flex: 1; }
+  header { margin-bottom: 28px; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 9px;
+    color: var(--accent-2); font: 500 11px 'IBM Plex Mono', monospace;
+    letter-spacing: .16em; text-transform: uppercase; margin-bottom: 15px;
+  }
+  .eyebrow::before {
+    content: ""; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent-2); box-shadow: 0 0 14px var(--accent-2);
+  }
+  h1 { font-size: clamp(30px, 5vw, 48px); line-height: 1.08; letter-spacing: -.045em; font-weight: 700; }
+  h1::after { content: "."; color: var(--accent); }
+  .sub { max-width: 680px; color: var(--muted); margin-top: 13px; font-size: 15px; line-height: 1.7; }
+  .console {
+    position: relative; display: flex; align-items: center; gap: 12px;
+    padding: 12px; background: linear-gradient(145deg, #0c1726, #070d17);
+    border: 1px solid rgba(0, 217, 255, .32); border-radius: 17px;
+    box-shadow: var(--glow), inset 0 1px rgba(255,255,255,.035);
+  }
+  .console .prompt { color: var(--accent-2); font: 500 14px 'IBM Plex Mono', monospace; padding: 0 5px; }
+  #url-input {
+    flex: 1; min-width: 0; padding: 12px 8px; color: var(--console-ink);
+    background: transparent; border: 0; outline: 0; font: 14px 'IBM Plex Mono', monospace;
+  }
+  #url-input::placeholder { color: #60758a; }
+  #analyze-btn {
+    border: 1px solid rgba(0,217,255,.6); border-radius: 11px; padding: 12px 20px;
+    color: #001018; background: linear-gradient(135deg, var(--accent), #65f4ff);
+    font: 700 13px 'Space Grotesk', sans-serif; cursor: pointer; white-space: nowrap;
+    transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+    box-shadow: 0 0 20px rgba(0,217,255,.16);
+  }
+  #analyze-btn:hover { transform: translateY(-1px); box-shadow: 0 0 26px rgba(0,217,255,.3); filter: brightness(1.06); }
+  #analyze-btn:active { transform: translateY(0); }
+  #analyze-btn:focus-visible, #url-input:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 4px; }
+  #analyze-btn:disabled { opacity: .6; cursor: wait; transform: none; }
+  .hint { color: var(--muted); margin: 12px 2px 0; font-size: 12px; }
+  .hint kbd {
+    color: #c9e5f4; font: 11px 'IBM Plex Mono', monospace; background: #111e2e;
+    border: 1px solid #263d52; border-bottom-width: 2px; border-radius: 5px; padding: 2px 6px;
+  }
+  #error-box {
+    display: none; margin-top: 18px; padding: 14px 16px; border-radius: 12px;
+    color: #ffdbe2; background: rgba(255,85,119,.1); border: 1px solid rgba(255,85,119,.4);
+    font-size: 14px; line-height: 1.5;
+  }
+  #results { display: none; margin-top: 30px; }
+  .verdict-card, #jarvis-panel {
+    background: linear-gradient(145deg, rgba(15,30,49,.96), rgba(8,17,29,.96));
+    border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--glow);
+  }
+  .verdict-card { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; padding: 25px; }
+  .score-block { min-width: 132px; }
+  #score-num { color: var(--accent); font-size: 54px; font-weight: 700; line-height: 1; letter-spacing: -.05em; text-shadow: 0 0 22px rgba(0,217,255,.18); }
+  #score-num small { color: var(--muted); font-size: 19px; font-weight: 500; }
+  .score-label, .log-title {
+    color: var(--muted); font: 500 11px 'IBM Plex Mono', monospace;
+    letter-spacing: .15em; text-transform: uppercase;
+  }
+  .score-label { margin-top: 9px; }
+  .verdict-info { flex: 1; min-width: 220px; }
+  .badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 7px 13px; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+  .badge.safe { color: var(--pass); background: rgba(98,255,182,.09); border: 1px solid rgba(98,255,182,.36); }
+  .badge.risky { color: var(--warn); background: rgba(255,200,87,.09); border: 1px solid rgba(255,200,87,.36); }
+  .badge.unsafe { color: var(--fail); background: rgba(255,85,119,.09); border: 1px solid rgba(255,85,119,.36); }
+  #scanned-url { display: block; margin-top: 13px; color: #b2c9da; font: 12px/1.65 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+  .meter { display: flex; gap: 4px; margin-top: 15px; }
+  .meter span { flex: 1; height: 7px; border-radius: 3px; background: #1b2a3b; transition: background .25s ease; }
+  .meter span.lit.safe { background: var(--pass); box-shadow: 0 0 10px rgba(98,255,182,.28); }
+  .meter span.lit.risky { background: var(--warn); box-shadow: 0 0 10px rgba(255,200,87,.24); }
+  .meter span.lit.unsafe { background: var(--fail); box-shadow: 0 0 10px rgba(255,85,119,.24); }
+  .log-title { margin: 28px 0 12px; }
+  #checks { list-style: none; }
+  .check {
+    display: flex; align-items: flex-start; gap: 12px; margin-bottom: 9px; padding: 15px 16px;
+    background: rgba(12,24,40,.82); border: 1px solid rgba(111,161,193,.16);
+    border-radius: 13px; animation: reveal .32s ease forwards;
+    transition: border-color .2s ease, transform .2s ease;
+  }
+  .check:hover { border-color: rgba(0,217,255,.32); transform: translateX(2px); }
+  @keyframes reveal { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+  .check .dot { width: 23px; height: 23px; border-radius: 8px; flex-shrink: 0; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #06111b; }
+  .check.pass .dot { background: var(--pass); }
+  .check.warn .dot { background: var(--warn); }
+  .check.fail .dot { background: var(--fail); }
+  .check h3 { color: #e1f2fc; font-size: 14px; font-weight: 600; }
+  .check p { color: var(--muted); margin-top: 4px; font-size: 12.5px; line-height: 1.55; overflow-wrap: anywhere; }
+  .check .status-tag { margin-left: auto; padding-top: 4px; flex-shrink: 0; color: var(--muted); font: 10px 'IBM Plex Mono', monospace; letter-spacing: .1em; }
+  .check.pass .status-tag { color: var(--pass); }
+  .check.warn .status-tag { color: var(--warn); }
+  .check.fail .status-tag { color: var(--fail); }
+  #jarvis-panel { margin-top: 26px !important; padding: 22px !important; }
+  #jarvis-panel .log-title { margin-top: 10px; }
+  #jarvis-panel p { color: #b5cadb; font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
+  #jarvis-metrics > div { background: rgba(4,12,22,.65); border-color: rgba(0,217,255,.2) !important; border-radius: 11px !important; padding: 13px !important; }
+  #jarvis-metrics > div > div:first-child { color: var(--muted); font: 10px 'IBM Plex Mono', monospace; letter-spacing: .06em; text-transform: uppercase; }
+  #jarvis-metrics > div > div:last-child { color: var(--accent-2); font-size: 17px; margin-top: 4px; }
+  #jarvis-report {
+    color: #bce4f3; background: #050b13; border: 1px solid rgba(0,217,255,.18);
+    font: 12px/1.7 'IBM Plex Mono', monospace; margin-top: 9px;
+  }
+  footer { color: #70879b; text-align: center; padding: 20px 18px 28px; font-size: 11px; line-height: 1.6; }
+  ::selection { color: #03111a; background: var(--accent); }
+  @media (max-width: 600px) {
+    main { width: min(100% - 24px, 900px); padding-top: 34px; }
+    .console { flex-wrap: wrap; gap: 7px; padding: 10px; }
+    .console .prompt { display: none; }
+    #url-input { flex-basis: 100%; padding: 10px 8px; font-size: 12px; }
+    #analyze-btn { width: 100%; }
+    .verdict-card { gap: 18px; padding: 19px; }
+    .score-block { min-width: 100px; }
+    #score-num { font-size: 45px; }
+    .verdict-info { min-width: 0; flex-basis: 100%; }
+    .check { gap: 9px; padding: 13px 11px; }
+    .check .status-tag { font-size: 9px; }
+    #jarvis-panel { padding: 15px !important; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+
+</style>
+
+</head>
+
+<body>
+
+<main>
+
+  <header>
+
+    <div class="eyebrow">7-layer scan &middot; live threat database</div>
+
+    <h1>URL Phishing Detector</h1>
+
+    <p class="sub">Paste any link below. It's checked against seven local security
+
+      heuristics plus the abuse.ch global malicious-URL database before you click it.</p>
+
+  </header>
+
+  <div class="console" role="search">
+
+    <span class="prompt" aria-hidden="true">&gt;\_</span>
+
+    <input
+
+      id="url-input"
+
+      type="text"
+
+      placeholder="https://example.com or just example.com"
+
+      autocomplete="off"
+
+      spellcheck="false"
+
+      aria-label="URL to analyze"
+
+      autofocus
+
+    />
+
+    <button id="analyze-btn" type="button">Analyze</button>
+
+  </div>
+
+  <p class="hint">Press <kbd>Enter</kbd> to analyze &middot; <kbd>Ctrl</kbd>+<kbd>L</kbd> to focus the URL field</p>
+
+  <div id="error-box" role="alert"></div>
+
+  <section id="results" aria-live="polite">
+
+    <div class="verdict-card">
+
+      <div class="score-block">
+
+        <div id="score-num" class="mono">0<small>/100</small></div>
+
+        <div class="score-label">Risk score</div>
+
+        <div class="meter" id="meter" aria-hidden="true"></div>
+
+      </div>
+
+      <div class="verdict-info">
+
+        <span id="verdict-badge" class="badge safe">Safe</span>
+
+        <span id="scanned-url"></span>
+
+      </div>
+
+    </div>
+
+    <div class="log-title">Security checks</div>
+
+    <ul id="checks"></ul>
+
+    <section id="jarvis-panel" style="margin-top:24px;padding:18px;border:1px solid #334155;border-radius:12px;">
+
+      <div class="log-title">JARVIS Analysis</div>
+
+      <p id="jarvis-status">JARVIS details will appear after analysis.</p>
+
+      <div id="jarvis-metrics" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0;"></div>
+
+      <div class="log-title">Behavioral analysis</div>
+
+      <p id="jarvis-behavior"></p>
+
+      <div class="log-title">Forensic report</div>
+
+      <pre id="jarvis-report" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:420px;overflow:auto;padding:12px;border-radius:8px;"></pre>
+
+    </section>
+
+  </section>
+
+</main>
+
+<footer>Heuristic analysis only &mdash; always use your own judgement before entering credentials on any site.</footer>
+
+<script>
+
+(function () {
+
+  const input = document.getElementById('url-input');
+
+  const btn = document.getElementById('analyze-btn');
+
+  const errorBox = document.getElementById('error-box');
+
+  const results = document.getElementById('results');
+
+  const scoreNum = document.getElementById('score-num');
+
+  const badge = document.getElementById('verdict-badge');
+
+  const scannedUrl = document.getElementById('scanned-url');
+
+  const checksList = document.getElementById('checks');
+
+  const meter = document.getElementById('meter');
+
+  // Build the 10-segment meter once
+
+  for (let i = 0; i < 10; i++) meter.appendChild(document.createElement('span'));
+
+  const VERDICT_LABEL = {
+
+    safe: 'Safe \u2713',
+
+    suspicious: 'Suspicious',
+
+    phishing: 'Phishing \u2717',
+
+    risky: 'Risky \u26A0',
+
+    unsafe: 'Unsafe \u2717'
+
+  };
+
+  const STATUS_ICON = {
+
+    pass: '\u2713',
+
+    low: '\u2713',
+
+    warn: '!',
+
+    medium: '!',
+
+    fail: '\u2717',
+
+    high: '\u2717'
+
+  };
+
+  function verdictClass(verdict) {
+
+    if (verdict === 'safe') return 'safe';
+
+    if (verdict === 'phishing' || verdict === 'unsafe') return 'unsafe';
+
+    return 'risky';
+
+  }
+
+  function severityClass(severity) {
+
+    if (severity === 'high') return 'fail';
+
+    if (severity === 'medium') return 'warn';
+
+    return 'pass';
+
+  }
+
+  function showError(msg) {
+
+    errorBox.textContent = msg;
+
+    errorBox.style.display = 'block';
+
+    results.style.display = 'none';
+
+  }
+
+  function clearError() {
+
+    errorBox.style.display = 'none';
+
+  }
+
+  function setLoading(loading) {
+
+    btn.disabled = loading;
+
+    btn.textContent = loading ? 'Scanning\u2026' : 'Analyze';
+
+  }
+
+  function renderResults(data, url) {
+
+  // ==========================================================
+
+  // 1. BASIC RESULT DATA
+
+  // ==========================================================
+
+    const verdict = String(
+
+      data.verdict || 'safe'
+
+    ).toLowerCase();
+
+    const score = Math.max(
+
+      0,
+
+      Math.min(
+
+        100,
+
+        Number(data.risk_score ?? data.safety_score ?? 0)
+
+      )
+
+    );
+
+    const confidence = Math.max(
+
+      0,
+
+      Math.min(
+
+        1,
+
+        Number(data.confidence ?? 0)
+
+      )
+
+    );
+
+    const summary =
+
+      data.summary ||
+
+      data.analysis?.summary ||
+
+      'No analysis summary available.';
+
+    const recommendation =
+
+      data.recommendation ||
+
+      data.analysis?.recommendation ||
+
+      'Review the URL carefully before proceeding.';
+
+    const checks =
+
+      Array.isArray(data.checks)
+
+        ? data.checks
+
+        : [];
+
+    const indicators =
+
+      Array.isArray(data.indicators)
+
+        ? data.indicators
+
+        : [];
+
+  // ==========================================================
+
+  // 2. VERDICT BADGE
+
+  // ==========================================================
+
+    badge.className = 'badge ' + verdictClass(verdict);
+
+    badge.textContent =
+
+      VERDICT_LABEL[verdict] ||
+
+      verdict.toUpperCase();
+
+    scannedUrl.textContent =
+
+      data.url || url;
+
+  // ==========================================================
+
+  // 3. SCORE
+
+  // ==========================================================
+
+    const reduced =
+
+      window.matchMedia(
+
+        '(prefers-reduced-motion: reduce)'
+
+      ).matches;
+
+    if (reduced) {
+
+      scoreNum.innerHTML =
+
+        score + '<small>/100</small>';
+
+    } else {
+
+      let current = 0;
+
+      const step = Math.max(
+
+        1,
+
+        Math.round(score / 30)
+
+      );
+
+      const timer = setInterval(function () {
+
+        current = Math.min(
+
+          score,
+
+          current + step
+
+        );
+
+        scoreNum.innerHTML =
+
+          current + '<small>/100</small>';
+
+        if (current >= score) {
+
+          clearInterval(timer);
+
+        }
+
+      }, 20);
+
+    }
+
+  // ==========================================================
+
+  // 4. SEGMENTED SCORE METER
+
+  // ==========================================================
+
+    const lit =
+
+      Math.round(score / 10);
+
+    Array.prototype.forEach.call(
+
+      meter.children,
+
+      function (seg, i) {
+
+        seg.className =
+
+          i < lit
+
+            ? 'lit ' + verdict
+
+            : '';
+
+      }
+
+    );
+
+  // ==========================================================
+
+  // 5. SUMMARY
+
+  // ==========================================================
+
+    const summaryElement =
+
+      document.getElementById('summary');
+
+    if (summaryElement) {
+
+      summaryElement.textContent =
+
+        summary;
+
+    }
+
+  // ==========================================================
+
+  // 6. RECOMMENDATION
+
+  // ==========================================================
+
+    const recommendationElement =
+
+      document.getElementById('recommendation');
+
+    if (recommendationElement) {
+
+      recommendationElement.textContent =
+
+        recommendation;
+
+    }
+
+  // ==========================================================
+
+  // 7. CONFIDENCE
+
+  // ==========================================================
+
+    const confidenceElement =
+
+      document.getElementById('confidence');
+
+    if (confidenceElement) {
+
+      confidenceElement.textContent =
+
+        Math.round(confidence * 100) + '%';
+
+  }
+
+  // ==========================================================
+
+  // 8. SCAN CHECKS
+
+  // ==========================================================
+
+    checksList.innerHTML = '';
+
+      checks.forEach(function (check, i) {
+
+      const li =
+
+        document.createElement('li');
+
+      const status =
+
+        String(
+
+          check.status || 'pass'
+
+        ).toLowerCase();
+
+      li.className =
+
+        'check ' + status;
+
+      li.style.animationDelay =
+
+        (i * 0.08) + 's';
+
+    // --------------------------------------------------------
+
+    // Status icon
+
+    // --------------------------------------------------------
+
+      const dot =
+
+        document.createElement('span');
+
+      dot.className =
+
+        'dot';
+
+      dot.textContent =
+
+        STATUS_ICON[status] ||
+
+        (status === 'pass'
+
+          ? '✓'
+
+          : status === 'warn'
+
+            ? '!'
+
+            : '×');
+
+    // --------------------------------------------------------
+
+    // Check body
+
+    // --------------------------------------------------------
+
+      const body =
+
+        document.createElement('div');
+
+      const h3 =
+
+        document.createElement('h3');
+
+      h3.textContent =
+
+        check.name || 'Security Check';
+
+      const p =
+
+        document.createElement('p');
+
+      p.textContent =
+
+        check.description || '';
+
+      body.appendChild(h3);
+
+      body.appendChild(p);
+
+    // --------------------------------------------------------
+
+    // Status tag
+
+    // --------------------------------------------------------
+
+      const tag =
+
+        document.createElement('span');
+
+      tag.className =
+
+        'status-tag';
+
+      tag.textContent =
+
+        status.toUpperCase();
+
+      li.appendChild(dot);
+
+      li.appendChild(body);
+
+      li.appendChild(tag);
+
+      checksList.appendChild(li);
+
+    });
+
+  // ==========================================================
+
+  // 9. INDICATORS
+
+  // ==========================================================
+
+    const indicatorsList =
+
+      document.getElementById(
+
+        'indicatorsList'
+
+      );
+
+    if (indicatorsList) {
+
+      indicatorsList.innerHTML = '';
+
+      indicators.forEach(function (indicator) {
+
+        const li =
+
+          document.createElement('li');
+
+        const name =
+
+          document.createElement('strong');
+
+        name.textContent =
+
+          indicator.name || 'Indicator';
+
+        const reason =
+
+          document.createElement('span');
+
+        reason.textContent =
+
+          indicator.reason || '';
+
+        li.appendChild(name);
+
+        li.appendChild(reason);
+
+        indicatorsList.appendChild(li);
+
+      });
+
+    }
+
+  // JARVIS analysis details
+
+    const jarvis = data.jarvis || {};
+
+    const preScan = jarvis.pre_scan || {};
+
+    const sandbox = jarvis.sandbox || {};
+
+    const behavior = jarvis.behavior || {};
+
+    const report = jarvis.forensic_report || {};
+
+    const status = document.getElementById('jarvis-status');
+
+    const metrics = document.getElementById('jarvis-metrics');
+
+    const behaviorElement = document.getElementById('jarvis-behavior');
+
+    const reportElement = document.getElementById('jarvis-report');
+
+    status.textContent = jarvis.sandbox_triggered === true
+
+      ? 'Sandbox triggered'
+
+      : 'Sandbox not triggered';
+
+    metrics.innerHTML = '';
+
+    [
+
+      ['Pre-scan risk', preScan.risk_score],
+
+      ['Sandbox threat score', sandbox.cumulative_threat_score],
+
+      ['Redirects', sandbox.redirect_count],
+
+      ['Browser events', sandbox.total_browser_events],
+
+      ['Network events', sandbox.total_network_events],
+
+      ['Early termination', sandbox.terminated_early == null ? 'N/A' : (sandbox.terminated_early ? 'Yes' : 'No')],
+
+      ['Behavior score', behavior.behavior_score == null ? 'N/A' : behavior.behavior_score + '/100'],
+
+      ['Behavior verdict', behavior.verdict || 'N/A']
+
+    ].forEach(function (item) {
+
+      const card = document.createElement('div');
+
+      card.style.cssText = 'padding:10px;border:1px solid #334155;border-radius:8px;min-width:0;';
+
+      const label = document.createElement('div');
+
+      label.style.cssText = 'font-size:12px;opacity:.75;margin-bottom:5px;';
+
+      label.textContent = item[0];
+
+      const value = document.createElement('div');
+
+      value.style.cssText = 'font-weight:600;overflow-wrap:anywhere;';
+
+      value.textContent = item[1] == null ? 'N/A' : String(item[1]);
+
+      card.appendChild(label);
+
+      card.appendChild(value);
+
+      metrics.appendChild(card);
+
+    });
+
+    behaviorElement.textContent =
+
+      behavior.summary || behavior.llm_summary || 'No behavioral summary returned.';
+
+    reportElement.textContent =
+
+      report.narrative || 'No forensic report returned by the API.';
+
+  // ==========================================================
+
+  // 10. SHOW RESULTS
+
+  // ==========================================================
+
+    results.style.display =
+
+      'block';
+
+    results.scrollIntoView({
+
+      behavior:
+
+        reduced
+
+          ? 'auto'
+
+          : 'smooth',
+
+      block: 'nearest'
+
+    });
+
+  }
+
+  async function analyze() {
+
+    const url = input.value.trim();
+
+    if (!url) {
+
+      showError('Please enter a URL to analyze.');
+
+      input.focus();
+
+      return;
+
+    }
+
+    clearError();
+
+    setLoading(true);
+
+    try {
+
+      const response = await fetch('/api/analyze', {
+
+        method: 'POST',
+
+        headers: { 'Content-Type': 'application/json' },
+
+        body: JSON.stringify({ url: url })
+
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || data.status === 'error') {
+
+        showError(data.error || 'Something went wrong during analysis. Please try again.');
+
+        return;
+
+      }
+
+      renderResults(data, url);
+
+    } catch (err) {
+
+      showError('Could not reach the analysis server. Make sure it is running, then try again.');
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  }
+
+  // Events
+
+  btn.addEventListener('click', analyze);
+
+  input.addEventListener('keydown', function (e) {
+
+    if (e.key === 'Enter') analyze();
+
+  });
+
+  document.addEventListener('keydown', function (e) {
+
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
+
+      e.preventDefault();
+
+      input.focus();
+
+      input.select();
+
+    }
+
+  });
+
+})();
+
+</script>
+
+</body>
+
+</html>

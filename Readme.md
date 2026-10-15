@@ -1,361 +1,307 @@
-# 🚀 Quick Start Guide
+# JARVIS — Phishing URL Detection
 
-Get the URL Phishing Detector running in 5 minutes!
+JARVIS is a Flask-based phishing URL analysis project. It combines URL
+heuristics, URLhaus threat-intelligence lookup, local AI analysis using
+Ollama/Qwen, optional browser-based observation, behavior analysis, and
+forensic reporting.
 
-## Prerequisites
+## Features
 
-- **Python 3.9+** - [Download here](https://www.python.org/)
-- **Git** - [Download here](https://git-scm.com/)
-- **Modern Browser** - Chrome, Firefox, Safari, or Edge
+- URL normalization and structural analysis.
+- Seven security checks displayed in the web interface.
+- URLhaus threat-intelligence lookup.
+- Local LLM analysis through Ollama using `qwen2.5:3b`.
+- Risk-based sandbox triggering (configured threshold: 30).
+- Playwright headless Chromium observation when triggered.
+- Browser/network event collection and behavior analysis.
+- A JARVIS forensic report with the final verdict and risk score.
+- Flask JSON API and automated pytest suite.
 
-## Installation (5 minutes)
+## Architecture
 
-### 1️⃣ Clone Repository
-
-```bash
-git clone https://github.com/yourusername/phishing-detector.git
-cd phishing-detector
+```text
+User submits URL
+       |
+       v
+JARVIS Controller
+       |
+       v
+Pre-scan analysis
+  |       |       |
+  v       v       v
+URLhaus  Heuristics  Qwen via Ollama
+       |
+       v
+Risk assessment
+       |
+       +---- Risk below threshold ----> Sandbox skipped
+       |
+       +---- Risk meets threshold ----> Playwright browser
+                                             |
+                                             v
+                                    Event collection
+                                             |
+                                             v
+                                     Behavior analysis
+       |                                     |
+       +------------------+------------------+
+                          v
+                  Forensic report
+                          |
+                          v
+                 Verdict and API response
 ```
 
-### 2️⃣ Create Virtual Environment
+## Requirements
 
-**Linux/Mac:**
-```bash
-python3 -m venv venv
-source venv/bin/activate
+- Windows 10/11 or another supported Python environment.
+- Python 3.9 or newer (Python 3.10+ is recommended).
+- Git, if cloning from a repository.
+- Ollama installed locally.
+- The Ollama model `qwen2.5:3b`.
+- Internet access for URLhaus lookup and any external URL navigation.
+
+## Installation on Windows
+
+Open Command Prompt in the project directory.
+
+### 1. Create and activate the virtual environment
+
+If the project environment already exists, activate it:
+
+```bat
+.venv\Scripts\activate
 ```
 
-**Windows:**
-```bash
-python -m venv venv
-venv\Scripts\activate
+To create it from scratch instead:
+
+```bat
+python -m venv .venv
+.venv\Scripts\activate
 ```
 
-### 3️⃣ Install Dependencies
+### 2. Install Python dependencies
 
-```bash
-pip install -r requirements.txt
+```bat
+python -m pip install -r requirements.txt
 ```
 
-This installs:
-- Flask (web framework)
-- Requests (HTTP library)
-- Python-dotenv (configuration)
+Install the Playwright Chromium browser if it is not already installed:
 
-### 4️⃣ Run Application
-
-```bash
-python server.py
+```bat
+python -m playwright install chromium
 ```
 
-You should see:
-```
- * Running on http://127.0.0.1:5000
- * Debug mode: on
-```
+### 3. Prepare Ollama
 
-### 5️⃣ Open in Browser
+Install Ollama from its official website if necessary:
+https://ollama.com/
 
-**Visit:** http://localhost:5000
+Download the configured model:
 
-🎉 **That's it! You're done!**
-
----
-
-## Usage
-
-### Analyzing URLs
-
-1. **Enter a URL:**
-   - Type: `https://example.com`
-   - Or just: `example.com` (auto-adds https)
-
-2. **Click "Analyze"**
-   - Wait for analysis (< 2 seconds)
-
-3. **Review Results:**
-   - Safety percentage (0-100%)
-   - Verdict (Safe ✓ | Risky ⚠ | Unsafe ✗)
-   - Detailed security checks
-
-### Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| **Enter** | Analyze current URL |
-| **Ctrl+L** | Focus URL input |
-
-### Example Tests
-
-Try these URLs to see different results:
-
-```
-Safe:     https://google.com
-Risky:    https://paypal-verify.com
-Unsafe:   http://192.168.1.1/verify
+```bat
+ollama pull qwen2.5:3b
 ```
 
----
+Make sure Ollama is running and the model is available:
 
-## Configuration (Optional)
-
-### Create .env File
-
-```bash
-cp .env.example .env
+```bat
+ollama list
 ```
 
-Edit `.env` with your settings:
+The application expects Ollama at its configured local endpoint, normally
+`http://127.0.0.1:11434`.
 
-```env
-FLASK_ENV=development
-FLASK_DEBUG=True
-PORT=5000
-HOST=127.0.0.1
+If Ollama is not already running as a background application, start it
+in a separate terminal:
+
+```bat
+ollama serve
 ```
 
----
+Keep the Ollama terminal running while using AI analysis.
 
-## Running Tests
+### 4. Start the Flask application
 
-### Install Test Dependencies
+In the project directory, with the virtual environment active:
 
-Already included in `requirements.txt`
-
-### Run All Tests
-
-```bash
-pytest tests/
+```bat
+python server_main.py
 ```
 
-### Run Specific Test
+The application uses the `HOST` and `PORT` environment settings when
+provided. The default local address is:
 
-```bash
-pytest tests/test_analyzer.py -v
+http://127.0.0.1:5000/
+
+Open that address in your browser.
+
+## Using the web interface
+
+1. Enter a URL.
+2. Click **Analyze** or press Enter.
+3. Review the verdict and risk score.
+4. Review the seven security checks.
+5. When the risk threshold is met, review the sandbox and behavior metrics.
+6. Read the forensic report and recommendation.
+
+A low-risk URL may not trigger the browser sandbox. A `safe` verdict
+means that strong threat indicators were not detected; it does not
+guarantee that a URL is harmless.
+
+## Example test URLs
+
+Safe baseline for UI testing:
+
+```text
+https://example.com
 ```
 
-### With Coverage Report
+Reserved-domain test for suspicious URL patterns:
 
-```bash
-pytest tests/ --cov=. --cov-report=html
+```text
+http://secure-login-verify.example.com/account/update?token=12345
 ```
 
----
+The second URL is intended to test URL heuristics. It is not evidence
+of a real phishing site, and navigation may fail because the hostname
+is not registered.
+
+Only test live websites when you have authorization and an appropriate
+isolated environment.
+
+## API usage
+
+The analysis endpoint is:
+
+```text
+POST http://127.0.0.1:5000/api/analyze
+Content-Type: application/json
+```
+
+Example request from Windows Command Prompt:
+
+```bat
+curl -X POST http://127.0.0.1:5000/api/analyze -H "Content-Type: application/json" -d "{\"url\":\"https://example.com\"}"
+```
+
+The JSON response can include:
+
+- `status`, `url`, `verdict`, and `risk_score`
+- `checks` and `indicators`
+- `threat_intelligence`
+- `jarvis.pre_scan`
+- `jarvis.sandbox` and `jarvis.behavior` when available
+- `jarvis.forensic_report`
+
+Fields related to sandboxing or behavior can be `null` when the sandbox
+is not triggered.
+
+## Running tests
+
+Run the full suite:
+
+```bat
+python -m pytest -q
+```
+
+Run sandbox tests only:
+
+```bat
+python -m pytest tests\test_sandbox_service.py -q
+```
+
+Run forensic-report tests only:
+
+```bat
+python -m pytest tests\test_forensic_reporter.py -q
+```
+
+The latest recorded full-suite result during project development was
+97 passed. Run the tests again after changing code to verify the current
+state.
+
+## Project structure
+
+```text
+Phishing_link_Detection/
+├── app/
+│   ├── features/
+│   └── services/
+│       ├── behavior_analyzer.py
+│       ├── forensic_reporter.py
+│       ├── jarvis_controller.py
+│       ├── llm_service.py
+│       └── sandbox_service.py
+├── templates/
+│   └── index.html
+├── tests/
+├── requirements.txt
+├── server.py
+├── server_main.py
+├── QUICKSTART.md
+└── Readme.md
+```
+
+The exact contents may change as the project evolves.
+
+## Security limitations
+
+- Heuristic and AI analysis can produce false positives and false
+  negatives. Do not treat a `safe` verdict as a guarantee.
+- URLhaus lookup only indicates whether a listing was found in the
+  checked source at the time of the request.
+- Headless mode and a separate Playwright browser context do not provide
+  OS-level isolation.
+- Chromium sandbox configuration depends on the operating system and
+  runtime. Before testing untrusted websites, use a dedicated, patched
+  virtual machine or similarly isolated environment with restricted
+  networking and no access to personal files or credentials.
+- Do not expose the development Flask server directly to the public
+  internet.
+- The project test count is not a measure of phishing-detection accuracy.
+  Do not claim a detection-accuracy percentage without a documented,
+  representative evaluation dataset and methodology.
 
 ## Troubleshooting
 
-### "Port 5000 is already in use"
+### Ollama is unavailable
 
-Change the port in `.env`:
-```env
-PORT=5001
+- Confirm Ollama is running.
+- Run `ollama list`.
+- Confirm `qwen2.5:3b` is installed.
+- Check the configured Ollama endpoint.
+
+### Chromium will not launch
+
+Run:
+
+```bat
+python -m playwright install chromium
 ```
 
-Then restart the server.
+If the issue continues, review the terminal error and use an isolated
+supported environment. Do not assume passing unit tests proves that
+browser isolation is secure.
 
-### "Module not found" error
+### Port 5000 is already in use
 
-Make sure virtual environment is activated:
-```bash
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate      # Windows
+Set a different `PORT` value if supported by your configuration, then
+restart the application.
+
+### Tests fail
+
+Activate the project's virtual environment, install dependencies, and
+run:
+
+```bat
+python -m pip install -r requirements.txt
+python -m pytest -q
 ```
 
-### "API Error" when analyzing
+## Project status
 
-- Check internet connection
-- URLhaus API might be temporarily down
-- Local analysis still works
-
-### Python version error
-
-Check your Python version:
-```bash
-python --version
-```
-
-Must be 3.9 or higher. Install from [python.org](https://python.org)
-
----
-
-## Project Structure
-
-```
-phishing-detector/
-├── server.py              # Main Flask app
-├── requirements.txt       # Dependencies
-├── .env.example          # Config template
-├── .gitignore            # Git ignore rules
-├── README.md             # Full documentation
-├── CONTRIBUTING.md       # How to contribute
-├── LICENSE               # MIT License
-│
-├── templates/
-│   └── index.html        # Web interface
-│
-├── tests/
-│   └── test_analyzer.py  # Unit tests
-│
-├── .github/
-│   └── workflows/
-│       └── tests.yml     # CI/CD pipeline
-│
-└── docs/
-    ├── INSTALLATION.md
-    ├── API.md
-    ├── ARCHITECTURE.md
-    └── TROUBLESHOOTING.md
-```
-
----
-
-## API Usage
-
-### Analyze URL via API
-
-```bash
-curl -X POST http://localhost:5000/api/analyze \
-  -H "Content-Type: application/json" \
-  -d '{"url": "https://example.com"}'
-```
-
-### Response Example
-
-```json
-{
-  "status": "ok",
-  "verdict": "safe",
-  "safety_score": 95,
-  "risk_score": 5,
-  "checks": [
-    {
-      "name": "SSL/TLS Encryption",
-      "status": "pass",
-      "description": "URL uses secure HTTPS protocol"
-    }
-  ]
-}
-```
-
----
-
-## Development
-
-### Code Style
-
-Follow PEP 8:
-```bash
-pip install pylint
-pylint server.py
-```
-
-### Add New Features
-
-1. Create feature branch
-2. Make changes
-3. Run tests
-4. Submit pull request
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
-
----
-
-## Deployment
-
-### Development Server
-```bash
-python server.py
-```
-
-### Production Server
-```bash
-pip install gunicorn
-gunicorn -w 4 -b 0.0.0.0:5000 server:app
-```
-
-### Docker (Optional)
-```bash
-docker build -t phishing-detector .
-docker run -p 5000:5000 phishing-detector
-```
-
----
-
-## Next Steps
-
-- 📖 Read [README.md](README.md) for full documentation
-- 🔌 Check [docs/API.md](docs/API.md) for API details
-- 🏗️ Review [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for system design
-- 🤝 See [CONTRIBUTING.md](CONTRIBUTING.md) to contribute
-- 🐛 Report issues on [GitHub Issues](https://github.com/yourusername/phishing-detector/issues)
-
----
-
-## Common Commands
-
-```bash
-# Activate virtual environment
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run application
-python server.py
-
-# Run tests
-pytest tests/
-
-# Run with coverage
-pytest tests/ --cov
-
-# Deactivate virtual environment
-deactivate
-```
-
----
-
-## Getting Help
-
-- **Documentation**: [README.md](README.md)
-- **API Docs**: [docs/API.md](docs/API.md)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/phishing-detector/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/phishing-detector/discussions)
-
----
-
-## Staying Updated
-
-Get new versions:
-
-```bash
-git pull origin main
-pip install -r requirements.txt
-```
-
----
-
-## FAQ
-
-**Q: Can I analyze multiple URLs at once?**
-A: Currently no, but it's planned for v1.1
-
-**Q: Does it store my data?**
-A: No! Everything is processed locally.
-
-**Q: Can I use this commercially?**
-A: Yes! MIT License permits commercial use.
-
-**Q: How accurate is it?**
-A: 99.67% on phishing detection
-
-**Q: Can I contribute?**
-A: Yes please! See [CONTRIBUTING.md](CONTRIBUTING.md)
-
----
-
-**Ready to analyze URLs?** Start the server and visit http://localhost:5000! 🚀
-
----
-
-*Last updated: January 2026*
+The application and its automated tests have been exercised locally.
+The latest recorded full test run passed 97 tests. This is a development
+status, not a security certification or an independently measured
+detection-accuracy result.
