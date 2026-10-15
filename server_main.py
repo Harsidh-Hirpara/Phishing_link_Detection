@@ -503,6 +503,17 @@ def api_analyze():
                 "error": "Please enter a URL",
             }), 400
 
+        from urllib.parse import urlsplit
+        try:
+            parsed_url = urlsplit(url)
+            valid_url = parsed_url.scheme in ("http", "https") and bool(parsed_url.hostname)
+            if parsed_url.port is not None:
+                valid_url = valid_url and 0 < parsed_url.port < 65536
+        except ValueError:
+            valid_url = False
+        if not valid_url:
+            return jsonify({"status": "error", "error": "Please enter a valid HTTP or HTTPS URL"}), 400
+
         logger.info(
             "Starting AI analysis: %s",
             url,
