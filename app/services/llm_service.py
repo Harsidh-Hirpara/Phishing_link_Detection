@@ -105,7 +105,8 @@ class LLMService:
             )
 
             return self._validate_result(
-                result
+                result,
+                evidence=evidence,
             )
 
         except requests.RequestException as exc:
@@ -374,6 +375,7 @@ SECURITY EVIDENCE:
     def _validate_result(
         self,
         result: dict,
+        evidence: dict | None = None,
     ) -> dict:
         """
         Validate and normalize the model response.
@@ -505,6 +507,14 @@ SECURITY EVIDENCE:
                 "indicators must be a list"
             )
 
+        threat = (evidence or {}).get("threat_intelligence") or {}
+        unlisted_ti_is_not_evidence = (
+            isinstance(threat, dict)
+            and threat.get("checked") is True
+            and threat.get("listed") is False
+            and not threat.get("api_error", False)
+        )
+
         validated_indicators = []
 
         for indicator in indicators:
@@ -535,6 +545,29 @@ SECURITY EVIDENCE:
                     "",
                 )
             ).strip()
+
+            indicator_text = f"{name} {reason}".lower()
+            is_ti_indicator = "threat intelligence" in indicator_text
+            describes_unlisted_result = any(
+                phrase in indicator_text
+                for phrase in (
+                    "unlisted",
+                    "not listed",
+                    "not found",
+                    "no match",
+                    "was not listed",
+                    "wasn't listed",
+                    "no listing",
+                    "not present in",
+                )
+            )
+
+            if (
+                unlisted_ti_is_not_evidence
+                and is_ti_indicator
+                and describes_unlisted_result
+            ):
+                continue
 
             if not name:
                 continue

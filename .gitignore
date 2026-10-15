@@ -19,3 +19,5 @@ note
 # Temporary Python source backups
 app/services/llm_service_BACKUP.py
 tests/test_llm_service_BACKUP.py
+app/services/llm_service_PRE_FIX_BACKUP.py
+patch_llm_indicator.py
