@@ -426,3 +426,16 @@ class TestBehaviorAnalyzer:
         result = analyzer.analyze(sandbox)
 
         assert 0 <= result["behavior_score"] <= 100
+
+
+    def test_combined_confidence_uses_rule_and_llm_weights(self):
+        analyzer = BehaviorAnalyzer()
+        result = analyzer._combine_verdicts([], 0, {
+            'verdict': 'safe',
+            'confidence': 0.5,
+            'llm_summary': 'Diagnostic test',
+            'llm_indicators': [],
+        })
+
+        assert result['confidence'] == 0.2
+        assert result['behavior_score'] == 17
