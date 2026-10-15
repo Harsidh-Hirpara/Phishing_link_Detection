@@ -7,3 +7,11 @@ __pycache__/
 .pytest_cache/
 .venv/
 venv/
+# Local credentials and temporary backups
+note
+*.bak
+*.backup
+*.security-backup
+*.pre_network_guard_backup
+*.pre_network_guard_v2_backup
+*.pre_sandbox_flags_backup
