@@ -204,6 +204,16 @@ IMPORTANT SECURITY RULES:
 
 13. Recommendations must be based only on the supplied evidence.
 
+RISK ASSESSMENT RULES:
+
+- Do not classify a URL as suspicious solely because threat intelligence does not list it.
+- Do not treat HTTPS, a normal URL structure, or missing threat-intelligence matches as suspicious indicators by themselves.
+- Assign risk points only to concrete suspicious or malicious indicators present in the supplied evidence.
+- If the evidence contains no strong phishing indicators, do not invent suspicious indicators or raise the risk score without evidence.
+- Use "suspicious" when actual suspicious indicators are present but evidence is insufficient for a phishing verdict.
+- Use "phishing" only when the supplied evidence supports that assessment.
+- The verdict, risk score, indicators, and summary must be consistent with one another.
+
 RISK GUIDANCE:
 
 Use the following general interpretation:
@@ -247,6 +257,24 @@ Return EXACTLY this structure:
   ],
   "recommendation": "Recommended user action"
 }}
+
+CONFIDENCE ASSESSMENT RULES:
+
+- Assess confidence independently from the risk score and verdict.
+- Base confidence on the strength, consistency, and completeness of the supplied evidence.
+- Use lower confidence when evidence is missing, ambiguous, conflicting, or based only on weak indicators.
+- Use higher confidence only when multiple reliable indicators support the assessment.
+- An unlisted URL in threat intelligence is not proof of safety.
+- HTTPS alone is not proof of legitimacy.
+- Do not automatically return 0.0 or 1.0; choose the value justified by the evidence.
+- Do not invent evidence to justify a confidence value.
+
+SUMMARY RULES:
+
+- Never describe a URL as safe, legitimate, trusted, or well-known based only on HTTPS or an unlisted threat-intelligence result.
+- Describe HTTPS and threat-intelligence lookup results as observations, not proof of legitimacy.
+- When evidence is limited, state that no strong phishing indicators were identified in the available evidence; do not claim the website is safe.
+- Keep the summary consistent with the supplied evidence and the assigned verdict.
 
 OUTPUT RULES:
 

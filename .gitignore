@@ -15,3 +15,7 @@ note
 *.pre_network_guard_backup
 *.pre_network_guard_v2_backup
 *.pre_sandbox_flags_backup
+
+# Temporary Python source backups
+app/services/llm_service_BACKUP.py
+tests/test_llm_service_BACKUP.py
